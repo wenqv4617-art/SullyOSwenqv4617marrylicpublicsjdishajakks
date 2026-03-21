@@ -12,10 +12,19 @@
 
 let registered = false;
 
+function resolveServiceWorkerRegistration() {
+  const currentDir = new URL('./', window.location.href);
+  return {
+    scope: currentDir.pathname,
+    scriptUrl: new URL('sw-keep-alive.js', currentDir).pathname,
+  };
+}
+
 async function ensureRegistered(): Promise<void> {
   if (registered || !('serviceWorker' in navigator)) return;
   try {
-    const reg = await navigator.serviceWorker.register('/sw-keep-alive.js', { scope: '/' });
+    const { scriptUrl, scope } = resolveServiceWorkerRegistration();
+    const reg = await navigator.serviceWorker.register(scriptUrl, { scope });
     await navigator.serviceWorker.ready;
     registered = true;
     console.log('[KeepAlive] Service Worker registered', reg.scope);
