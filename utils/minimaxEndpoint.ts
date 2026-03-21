@@ -65,6 +65,13 @@ const buildUpstreamWebInit = (
   return { ...init, headers };
 };
 
+const shouldBypassWebProxy = (proxyPath: string): boolean => {
+  if (!PROXY_MAP[proxyPath]) return false;
+  if (typeof window === 'undefined') return false;
+  const host = String(window.location.hostname || '').toLowerCase();
+  return host === 'github.io' || host.endsWith('.github.io');
+};
+
 /**
  * A fetch-like wrapper that uses CapacitorHttp on native platforms
  * to bypass CORS restrictions, and regular fetch on web.
@@ -78,6 +85,9 @@ export async function minimaxFetch(
   const url = resolveMinimaxUrl(proxyPath);
 
   if (!isNative()) {
+    if (shouldBypassWebProxy(proxyPath)) {
+      return fetch(PROXY_MAP[proxyPath], buildUpstreamWebInit(init));
+    }
     const res = await fetch(url, init);
     // Static deployments (e.g. GitHub Pages) don't support POST /api/* proxy.
     // If proxy endpoint is unavailable, retry against MiniMax upstream directly.
