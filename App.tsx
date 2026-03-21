@@ -6,11 +6,17 @@ import { isIOSStandaloneWebApp } from './utils/iosStandalone';
 
 const App: React.FC = () => {
   const useAbsoluteShell = typeof window !== 'undefined' && isIOSStandaloneWebApp();
+  const shellClassName = useAbsoluteShell
+    ? 'fixed inset-0 w-full h-full bg-black overflow-hidden'
+    : 'relative w-full bg-black overflow-hidden';
+  const shellStyle = useAbsoluteShell
+    ? { minHeight: '100dvh' }
+    : { height: 'var(--app-height, 100dvh)', minHeight: 'var(--app-height, 100dvh)' };
 
   return (
     <div
-      className="relative w-full bg-black overflow-hidden"
-      style={{ height: 'var(--app-height, 100dvh)', minHeight: 'var(--app-height, 100dvh)' }}
+      className={shellClassName}
+      style={shellStyle}
     >
       <div
         className={`${useAbsoluteShell ? 'absolute' : 'fixed'} inset-0 w-full h-full z-0 bg-black`}

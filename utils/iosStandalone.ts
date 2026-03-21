@@ -1,4 +1,5 @@
 let hasInstalledIOSStandaloneWorkaround = false;
+let stableStandaloneHeight = 0;
 
 export const isIOSDevice = (): boolean => {
     if (typeof navigator === 'undefined') return false;
@@ -21,10 +22,19 @@ const isTextEntryElement = (target: EventTarget | null): target is HTMLElement =
 
 const setViewportVars = () => {
     if (typeof document === 'undefined') return;
-    const viewportHeight = Math.round(window.visualViewport?.height || window.innerHeight);
+    const innerHeight = Math.round(window.innerHeight);
+    const viewportHeight = Math.round(window.visualViewport?.height || innerHeight);
     const viewportOffsetTop = Math.round(window.visualViewport?.offsetTop || 0);
-    const keyboardInset = Math.max(0, window.innerHeight - viewportHeight - viewportOffsetTop);
-    document.documentElement.style.setProperty('--app-height', `${viewportHeight}px`);
+    const obscuredHeight = Math.max(0, innerHeight - viewportHeight - viewportOffsetTop);
+    const keyboardInset = obscuredHeight > 120 ? obscuredHeight : 0;
+    const nextStableHeight = Math.max(innerHeight, viewportHeight + viewportOffsetTop);
+
+    if (!keyboardInset || !stableStandaloneHeight) {
+        stableStandaloneHeight = nextStableHeight;
+    }
+
+    document.documentElement.style.setProperty('--app-height', `${stableStandaloneHeight || nextStableHeight}px`);
+    document.documentElement.style.setProperty('--visual-viewport-height', `${viewportHeight}px`);
     document.documentElement.style.setProperty('--keyboard-inset', `${keyboardInset}px`);
 };
 
