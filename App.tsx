@@ -10,8 +10,8 @@ const App: React.FC = () => {
     ? 'fixed inset-0 w-full h-full bg-black overflow-hidden'
     : 'relative w-full bg-black overflow-hidden';
   const shellStyle = useAbsoluteShell
-    ? { minHeight: '100dvh' }
-    : { height: 'var(--app-height, 100dvh)', minHeight: 'var(--app-height, 100dvh)' };
+    ? { height: 'var(--app-height, 100lvh)', minHeight: 'var(--app-height, 100lvh)' }
+    : { height: 'var(--app-height, 100lvh)', minHeight: 'var(--app-height, 100lvh)' };
 
   return (
     <div

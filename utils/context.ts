@@ -1,5 +1,6 @@
 
 import { CharacterProfile, UserProfile } from '../types';
+import { normalizeUserImpression } from './impression';
 
 /**
  * Memory Central
@@ -122,8 +123,8 @@ export const ContextBuilder = {
 
         // 4. [NEW] 印象档案 (Private Impression)
         // 这是角色对用户的私密看法，只有角色知道
-        if (char.impression) {
-            const imp = char.impression;
+        const imp = normalizeUserImpression(char.impression);
+        if (imp) {
             context += `### [私密档案: 我眼中的${user.name}] (Private Impression)\n`;
             context += `(注意：以下内容是你内心对TA的真实看法，不要直接告诉用户，但要基于这些看法来决定你的态度。)\n`;
             context += `- 核心评价: ${imp.personality_core.summary}\n`;

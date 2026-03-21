@@ -17,6 +17,7 @@ import MemoryArchivist from '../components/character/MemoryArchivist';
 import { safeResponseJson } from '../utils/safeApi';
 import { fetchMiniMaxVoices, MiniMaxVoiceItem } from '../utils/minimaxVoice';
 import { resolveMiniMaxApiKey } from '../utils/minimaxApiKey';
+import { normalizeUserImpression } from '../utils/impression';
 
 const CharacterCard: React.FC<{
     char: CharacterProfile;
@@ -570,8 +571,9 @@ const Character: React.FC = () => {
           if (msgText) messagesToAnalyze += `\n【最近的聊天记录 (Recent Chats - 仅用于检测近期变化)】:\n${msgText}\n`;
 
           // 重置时不传旧印象，避免模型锚定在旧内容上
-          const currentProfileJSON = (type === 'initial') ? "null" : (formData.impression ? JSON.stringify(formData.impression, null, 2) : "null");
-          const isInitialGeneration = type === 'initial' || !formData.impression;
+          const normalizedCurrentImpression = normalizeUserImpression(formData.impression);
+          const currentProfileJSON = (type === 'initial') ? "null" : (normalizedCurrentImpression ? JSON.stringify(normalizedCurrentImpression, null, 2) : "null");
+          const isInitialGeneration = type === 'initial' || !normalizedCurrentImpression;
           
           const summaryInstruction = isInitialGeneration 
               ? "用一段话（100字以内）概括你对TA的【宏观整体印象】。不要局限于最近的对话，而是定义TA本质上是个什么样的人，以及TA对你意味着什么。必须第一人称。"
@@ -669,14 +671,8 @@ ${isInitialGeneration ? `
           let content = data.choices[0].message.content;
           
           content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-          const parsed: UserImpression = JSON.parse(content);
-
-          // Normalize observed_changes: convert objects to strings if AI returned wrong format
-          if (parsed.observed_changes && Array.isArray(parsed.observed_changes)) {
-              parsed.observed_changes = parsed.observed_changes.map((c: any) =>
-                  typeof c === 'string' ? c : c?.description ? `[${c.period || ''}] ${c.description}` : JSON.stringify(c)
-              );
-          }
+          const parsed = normalizeUserImpression(JSON.parse(content));
+          if (!parsed) throw new Error('印象生成结果不完整');
 
           if (editingIdRef.current === targetId) {
               handleChange('impression', parsed);

@@ -22,29 +22,41 @@ const isTextEntryElement = (target: EventTarget | null): target is HTMLElement =
 
 const setViewportVars = () => {
     if (typeof document === 'undefined') return;
+    const shouldStabilizeHeight = isIOSStandaloneWebApp();
     const innerHeight = Math.round(window.innerHeight);
     const viewportHeight = Math.round(window.visualViewport?.height || innerHeight);
     const viewportOffsetTop = Math.round(window.visualViewport?.offsetTop || 0);
     const obscuredHeight = Math.max(0, innerHeight - viewportHeight - viewportOffsetTop);
     const keyboardInset = obscuredHeight > 120 ? obscuredHeight : 0;
-    const nextStableHeight = Math.max(innerHeight, viewportHeight + viewportOffsetTop);
+    const nextViewportHeight = Math.max(innerHeight, viewportHeight + viewportOffsetTop);
 
-    if (!keyboardInset || !stableStandaloneHeight) {
-        stableStandaloneHeight = nextStableHeight;
+    if (shouldStabilizeHeight) {
+        if (!keyboardInset || !stableStandaloneHeight) {
+            stableStandaloneHeight = nextViewportHeight;
+        }
+    } else {
+        stableStandaloneHeight = 0;
     }
 
-    document.documentElement.style.setProperty('--app-height', `${stableStandaloneHeight || nextStableHeight}px`);
+    const appHeight = shouldStabilizeHeight
+        ? (stableStandaloneHeight || nextViewportHeight)
+        : nextViewportHeight;
+
+    document.documentElement.style.setProperty('--app-height', `${appHeight}px`);
     document.documentElement.style.setProperty('--visual-viewport-height', `${viewportHeight}px`);
     document.documentElement.style.setProperty('--keyboard-inset', `${keyboardInset}px`);
 };
 
 export const installIOSStandaloneWorkaround = () => {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
-    if (!isIOSStandaloneWebApp() || hasInstalledIOSStandaloneWorkaround) return;
+    if (hasInstalledIOSStandaloneWorkaround) return;
 
     hasInstalledIOSStandaloneWorkaround = true;
-    document.documentElement.classList.add('ios-standalone');
-    document.body.classList.add('ios-standalone');
+    const useStandaloneFixes = isIOSStandaloneWebApp();
+    if (useStandaloneFixes) {
+        document.documentElement.classList.add('ios-standalone');
+        document.body.classList.add('ios-standalone');
+    }
 
     const handleViewportChange = () => {
         setViewportVars();
@@ -77,10 +89,12 @@ export const installIOSStandaloneWorkaround = () => {
         }, 180);
     };
 
-    setViewportVars();
     window.addEventListener('resize', handleViewportChange);
     window.visualViewport?.addEventListener('resize', handleViewportChange);
     window.visualViewport?.addEventListener('scroll', handleViewportChange);
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
+    if (useStandaloneFixes) {
+        document.addEventListener('focusin', handleFocusIn);
+        document.addEventListener('focusout', handleFocusOut);
+    }
+    setViewportVars();
 };

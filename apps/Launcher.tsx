@@ -483,7 +483,10 @@ const Launcher: React.FC = () => {
       </div>
 
       {/* Page Indicators */}
-      <div className="absolute bottom-24 left-0 w-full flex justify-center gap-2 pointer-events-none z-20">
+      <div
+          className="absolute left-0 w-full flex justify-center gap-2 pointer-events-none z-20"
+          style={{ bottom: 'calc(max(env(safe-area-inset-bottom), 0.5rem) + 5.5rem)' }}
+      >
           {Array.from({ length: totalPages }).map((_, i) => (
               <div 
                 key={i}
@@ -494,7 +497,10 @@ const Launcher: React.FC = () => {
       </div>
 
       {/* Floating Dock - Updated Margin and Safe Area handling */}
-      <div className="mt-auto flex justify-center w-full px-4 mb-2 pb-[env(safe-area-inset-bottom)] relative z-30">
+      <div
+           className="mt-auto flex justify-center w-full px-4 relative z-30"
+           style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0.5rem)' }}
+      >
            <div className="bg-white/[0.12] backdrop-blur-3xl rounded-[1.75rem] border border-white/[0.12] shadow-[0_8px_40px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(255,255,255,0.08)] px-4 py-3 flex gap-3 sm:gap-6 items-center mx-auto max-w-full justify-between overflow-x-auto no-scrollbar transform-gpu">
                {dockAppsConfig.map(app => (
                    <div key={app.id} className="relative">

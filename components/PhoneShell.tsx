@@ -1,7 +1,7 @@
 
 
 
-import React, { useState, useEffect, Component, ErrorInfo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOS } from '../context/OSContext';
 import StatusBar from './os/StatusBar';
 import Launcher from '../apps/Launcher';
@@ -41,12 +41,16 @@ import { StatusBar as CapStatusBar, Style as StatusBarStyle } from '@capacitor/s
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { isIOSStandaloneWebApp } from '../utils/iosStandalone';
+import AppErrorBoundary from './os/AppErrorBoundary';
 
+/*
 // Internal Error Boundary Component
-class AppErrorBoundary extends Component<{ children: React.ReactNode, onCloseApp: () => void }, { hasError: boolean, error: Error | null }> {
-    constructor(props: any) {
+class AppErrorBoundary extends Component<{ children: React.ReactNode, onCloseApp: () => void, resetKey: string }, { hasError: boolean, error: Error | null, copyLabel: string }> {
+    private copyLabelTimer: number | null = null;
+
+    constructor(props: { children: React.ReactNode, onCloseApp: () => void, resetKey: string }) {
         super(props);
-        this.state = { hasError: false, error: null };
+        this.state = { hasError: false, error: null, copyLabel: '复制报错信息' };
     }
 
     static getDerivedStateFromError(error: Error) {
@@ -57,12 +61,62 @@ class AppErrorBoundary extends Component<{ children: React.ReactNode, onCloseApp
         console.error("App Crash:", error, errorInfo);
     }
 
-    // Reset error state when children change (e.g. app switch)
-    componentDidUpdate(prevProps: any) {
-        if (prevProps.children !== this.props.children) {
-            this.setState({ hasError: false, error: null });
+    // Reset error state only when the active app changes.
+    componentDidUpdate(prevProps: { children: React.ReactNode, onCloseApp: () => void, resetKey: string }) {
+        if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+            this.setState({ hasError: false, error: null, copyLabel: '复制报错信息' });
         }
     }
+
+    componentWillUnmount() {
+        if (this.copyLabelTimer) window.clearTimeout(this.copyLabelTimer);
+    }
+
+    private updateCopyLabel = (label: string) => {
+        if (this.copyLabelTimer) window.clearTimeout(this.copyLabelTimer);
+        this.setState({ copyLabel: label });
+        this.copyLabelTimer = window.setTimeout(() => {
+            this.setState({ copyLabel: '复制报错信息' });
+            this.copyLabelTimer = null;
+        }, 1800);
+    };
+
+    private handleCopy = async () => {
+        const errText = this.state.error?.stack || this.state.error?.message || 'Unknown Error';
+
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(errText);
+                this.updateCopyLabel('已复制');
+                return;
+            }
+        } catch {
+            // Fall through to legacy copy path.
+        }
+
+        try {
+            const textarea = document.createElement('textarea');
+            textarea.value = errText;
+            textarea.setAttribute('readonly', 'true');
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            textarea.style.pointerEvents = 'none';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            const copied = document.execCommand('copy');
+            document.body.removeChild(textarea);
+            if (copied) {
+                this.updateCopyLabel('已复制');
+                return;
+            }
+        } catch {
+            // Fall through to prompt fallback.
+        }
+
+        window.prompt('请手动复制报错信息', errText);
+        this.updateCopyLabel('请手动复制');
+    };
 
     render() {
         if (this.state.hasError) {
@@ -94,6 +148,7 @@ class AppErrorBoundary extends Component<{ children: React.ReactNode, onCloseApp
         return this.props.children;
     }
 }
+*/
 
 const DISCLAIMER_KEY = 'sullyos_disclaimer_accepted';
 
@@ -144,7 +199,7 @@ const DisclaimerPopup: React.FC<{ onAccept: () => void }> = ({ onAccept }) => (
 );
 
 const PhoneShell: React.FC = () => {
-  const { theme, isLocked, unlock, activeApp, closeApp, virtualTime, isDataLoaded, toasts, unreadMessages, characters, handleBack, suspendedCall, resumeCall } = useOS();
+  const { theme, isLocked, unlock, activeApp, closeApp, virtualTime, isDataLoaded, toasts, unreadMessages, characters, handleBack, suspendedCall, resumeCall, activeCharacterId } = useOS();
   const useIOSStandaloneLayout = isIOSStandaloneWebApp();
 
   // Disclaimer popup for first-time users
@@ -393,7 +448,7 @@ const PhoneShell: React.FC = () => {
 > 
           {/* App Container */}
          <div className="flex-1 relative overflow-hidden" style={{ contain: useIOSStandaloneLayout ? undefined : 'layout style paint' }}>
-    <AppErrorBoundary onCloseApp={closeApp}>
+    <AppErrorBoundary onCloseApp={closeApp} resetKey={`${activeApp}:${activeCharacterId || 'none'}`}>
         {renderApp()}
     </AppErrorBoundary>
 </div>
