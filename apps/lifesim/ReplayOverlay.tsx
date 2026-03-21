@@ -49,12 +49,17 @@ const NarrativeReplayOverlay: React.FC<{
             style={{ background: 'rgba(0,0,0,0.35)' }}>
             <div className="retro-window w-full" style={{
                 maxWidth: 320,
+                maxHeight: 'calc(var(--app-height, 100lvh) - 32px)',
                 boxShadow: '4px 4px 0px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.5)',
                 borderColor: accent,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
             }}>
                 {/* Titlebar */}
                 <div className="retro-titlebar" style={{
                     background: `linear-gradient(180deg, ${accent}cc, ${accent})`,
+                    flexShrink: 0,
                 }}>
                     <span>replay.exe - {currentIndex + 1}/{actions.length}</span>
                     <div className="flex items-center gap-1.5">
@@ -67,7 +72,17 @@ const NarrativeReplayOverlay: React.FC<{
                     </div>
                 </div>
 
-                <div style={{ padding: 12 }}>
+                <div
+                    className="no-scrollbar"
+                    style={{
+                        padding: 12,
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
+                        minHeight: 0,
+                        flex: 1,
+                        overscrollBehavior: 'contain',
+                    }}
+                >
                     {/* Character info */}
                     <div className="flex items-start gap-2.5 mb-3">
                         <div style={{
@@ -167,7 +182,7 @@ const NarrativeReplayOverlay: React.FC<{
                 </div>
 
                 {/* Action button */}
-                <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(0,0,0,0.08)' }}>
+                <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(0,0,0,0.08)', flexShrink: 0 }}>
                     <button onClick={onNext}
                         className="retro-btn retro-btn-primary w-full flex items-center justify-center gap-1"
                         style={{ padding: '7px 12px', background: `linear-gradient(180deg, ${accent}cc, ${accent})`, borderColor: accent }}>
