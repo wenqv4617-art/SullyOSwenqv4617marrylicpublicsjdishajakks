@@ -25,6 +25,7 @@
     "@rei-standard/amsg-client": "^2.0.1",
     "@rei-standard/amsg-server": "^2.0.1",
     "@rei-standard/amsg-sw": "^2.0.1",
+    "jszip": "^3.10.1",
     "pg": "^8.20.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

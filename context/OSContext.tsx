@@ -22,7 +22,6 @@ type JSZipCtorLike = {
   loadAsync: (file: File) => Promise<JSZipLike>;
 };
 
-const dynamicImport = new Function('m', 'return import(m)') as (m: string) => Promise<any>;
 let jszipCtorPromise: Promise<JSZipCtorLike> | null = null;
 
 const loadScript = (src: string): Promise<void> => new Promise((resolve, reject) => {
@@ -51,13 +50,13 @@ const loadScript = (src: string): Promise<void> => new Promise((resolve, reject)
 
 const loadJSZip = async (): Promise<JSZipCtorLike> => {
   if (!jszipCtorPromise) {
-    jszipCtorPromise = dynamicImport('jszip')
+    jszipCtorPromise = import('jszip')
       .then((mod) => ((mod as any).default || mod) as JSZipCtorLike)
-      .catch(async () => {
-        await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
-        const ctor = (window as any).JSZip as JSZipCtorLike | undefined;
+      .catch((error) => {
+        jszipCtorPromise = null;
+        const msg = error instanceof Error ? error.message : 'unknown error'; const ctor = true;
         if (!ctor) throw new Error('JSZip 加载失败');
-        return ctor;
+        throw new Error(`JSZip load failed: ${msg}`);
       });
   }
   return jszipCtorPromise;
