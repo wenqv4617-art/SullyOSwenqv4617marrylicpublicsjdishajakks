@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import { ShareNetwork, Trash, Plus, Smiley, PaperPlaneTilt, Money, BookOpenText, GearSix, Image, Lock, ArrowsClockwise, ChatCircleDots, SmileyWink } from '@phosphor-icons/react';
 import { CharacterProfile, ChatTheme, EmojiCategory, Emoji } from '../../types';
 import { PRESET_THEMES } from './ChatConstants';
+import { isIOSStandaloneWebApp } from '../../utils/iosStandalone';
 
 interface ChatInputAreaProps {
     input: string;
@@ -57,9 +58,11 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
     chromeStyle = 'soft',
 }) => {
     const chatImageInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const startPos = useRef({ x: 0, y: 0 }); 
     const isLongPressTriggered = useRef(false); // Track if long press action fired
+    const useIOSStandaloneInputFix = isIOSStandaloneWebApp();
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -156,6 +159,23 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
         }
     };
 
+    const handleInputFocus = () => {
+        if (!useIOSStandaloneInputFix) return;
+        setShowPanel('none');
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+        window.requestAnimationFrame(() => {
+            window.requestAnimationFrame(() => {
+                if (document.activeElement !== textarea) return;
+                try {
+                    textarea.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                } catch {
+                    // Older iOS builds can throw on unsupported scroll options.
+                }
+            });
+        });
+    };
+
     const isDiscordStyle = inputStyle === 'discord';
     const isPixelStyle = inputStyle === 'pixel' || chromeStyle === 'pixel';
     const shellClass = chromeStyle === 'pixel'
@@ -234,13 +254,19 @@ const ChatInputArea: React.FC<ChatInputAreaProps> = ({
                     <button onClick={() => setShowPanel(showPanel === 'actions' ? 'none' : 'actions')} className={actionButtonClass}>
                         <Plus className="w-6 h-6" weight="bold" />
                     </button>
-                    <div className={`flex-1 min-w-0 flex items-center px-1 transition-all overflow-hidden ${inputWrapClass} ${isPixelStyle ? 'focus-within:bg-[#fff7ed]' : 'border border-transparent focus-within:bg-white focus-within:border-primary/30'}`}>
+                    <div className={`flex-1 min-w-0 flex items-center px-1 transition-all ${useIOSStandaloneInputFix ? 'overflow-visible' : 'overflow-hidden'} ${inputWrapClass} ${isPixelStyle ? 'focus-within:bg-[#fff7ed]' : 'border border-transparent focus-within:bg-white focus-within:border-primary/30'}`}>
                         <textarea 
+                            ref={textareaRef}
                             rows={1} 
                             value={input} 
                             onChange={(e) => setInput(e.target.value)} 
                             onKeyDown={handleKeyDown} 
-                            className={`flex-1 min-w-0 bg-transparent px-4 py-3 text-[15px] resize-none max-h-24 no-scrollbar ${isDiscordStyle ? 'text-white placeholder:text-slate-500' : isPixelStyle ? 'text-[#6a4c35] placeholder:text-[#9b8677]' : ''}`} 
+                            onFocus={handleInputFocus}
+                            inputMode="text"
+                            enterKeyHint="send"
+                            autoCorrect="on"
+                            autoCapitalize="sentences"
+                            className={`flex-1 min-w-0 bg-transparent px-4 py-3 ${useIOSStandaloneInputFix ? 'text-[16px]' : 'text-[15px]'} resize-none max-h-24 no-scrollbar ${isDiscordStyle ? 'text-white placeholder:text-slate-500' : isPixelStyle ? 'text-[#6a4c35] placeholder:text-[#9b8677]' : ''}`} 
                             placeholder="Message..." 
                             style={{ height: 'auto' }} 
                         />

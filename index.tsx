@@ -3,12 +3,15 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { KeepAlive } from './utils/keepAlive';
 import { ProactiveChat } from './utils/proactiveChat';
+import { installIOSStandaloneWorkaround } from './utils/iosStandalone';
 
 // Register the keep-alive Service Worker early so it's ready before any AI calls
 KeepAlive.init().then(() => {
   // Resume any active proactive schedule after SW is ready
   ProactiveChat.resume();
 });
+
+installIOSStandaloneWorkaround();
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

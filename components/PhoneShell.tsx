@@ -40,6 +40,7 @@ import { App as CapApp } from '@capacitor/app';
 import { StatusBar as CapStatusBar, Style as StatusBarStyle } from '@capacitor/status-bar';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
+import { isIOSStandaloneWebApp } from '../utils/iosStandalone';
 
 // Internal Error Boundary Component
 class AppErrorBoundary extends Component<{ children: React.ReactNode, onCloseApp: () => void }, { hasError: boolean, error: Error | null }> {
@@ -144,6 +145,7 @@ const DisclaimerPopup: React.FC<{ onAccept: () => void }> = ({ onAccept }) => (
 
 const PhoneShell: React.FC = () => {
   const { theme, isLocked, unlock, activeApp, closeApp, virtualTime, isDataLoaded, toasts, unreadMessages, characters, handleBack, suspendedCall, resumeCall } = useOS();
+  const useIOSStandaloneLayout = isIOSStandaloneWebApp();
 
   // Disclaimer popup for first-time users
   const [showDisclaimer, setShowDisclaimer] = useState(() => {
@@ -370,7 +372,7 @@ const PhoneShell: React.FC = () => {
              filter: activeApp !== AppID.Launcher ? 'blur(10px)' : 'none',
              opacity: activeApp !== AppID.Launcher ? 0.6 : 1,
              backfaceVisibility: 'hidden',
-             contain: 'strict'
+             contain: useIOSStandaloneLayout ? undefined : 'strict'
          }}
        />
        
@@ -390,7 +392,7 @@ const PhoneShell: React.FC = () => {
   }}
 > 
           {/* App Container */}
-         <div className="flex-1 relative overflow-hidden" style={{ contain: 'layout style paint' }}>
+         <div className="flex-1 relative overflow-hidden" style={{ contain: useIOSStandaloneLayout ? undefined : 'layout style paint' }}>
     <AppErrorBoundary onCloseApp={closeApp}>
         {renderApp()}
     </AppErrorBoundary>
