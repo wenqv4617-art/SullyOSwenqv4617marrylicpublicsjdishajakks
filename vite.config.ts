@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { bakeVoiceMiddleware } from './server/bake-voice-middleware';
+import { bakeVoiceMiddleware } from './server';
 
 export default defineConfig({
   plugins: [
@@ -8,12 +8,11 @@ export default defineConfig({
     {
       name: 'bake-voice-middleware',
       configureServer(server) {
-        server.middlewares.use('/api/minimax/bake-voice', bakeVoiceMiddleware);
+        server.middlewares.use('/api/minimax/');
       },
     },
   ],
-  // GitHub Pages 发布时使用相对路径，避免仓库子路径导致资源 404
-  base: process.env.GITHUB_PAGES ? './' : '/',
+  base: '/SullyOSwenqv4617marrylicpublicsjdishajakks/',
   server: {
     proxy: {
       '/api/minimax/t2a': {
@@ -28,14 +27,7 @@ export default defineConfig({
         secure: true,
         rewrite: () => '/v1/get_voice',
       },
-    }
+    },
   },
-  build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
-    rollupOptions: {
-      // 关键修复：将这些包排除在打包之外，让浏览器通过 index.html 的 importmap 加载
-      external: ['pdfjs-dist', 'katex']
-    }
-  }
 });
+
